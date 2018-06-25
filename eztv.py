@@ -92,7 +92,7 @@ class eztv(object):
     def __init__(self,**parameter_list):
         logging.debug("Class Initiated")
         self.name = "eztv"
-        self.supported_categories = {'tv': 'tv'}
+        self.supported_categories = {'tv': 'tv', 'all' : 'all'}
 
     def search(self,what,cat='all'):
         logging.debug("Searching")
