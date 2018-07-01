@@ -1,7 +1,9 @@
-#VERSION: 0.1
+#VERSION: 0.2
 #AUTHORS: nindogo
 
+import re
 import logging
+import copy
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger(__name__)
@@ -19,11 +21,12 @@ from helpers import retrieve_url, download_file
 import re
 
 URL = "https://eztv.ag"
-response=[]
+globalResponse=[]
+
 
 
 class eztvHtmlParser(HTMLParser):
-        A, TD, TR, HREF, TABLE = ('a', 'td', 'tr', 'href', 'table')
+        A, TD, TR, HREF, TABLE, SCRIPT= ('a', 'td', 'tr', 'href', 'table', 'script')
         inTableRow = False
         inTable = False
         current_item = {}
@@ -33,7 +36,7 @@ class eztvHtmlParser(HTMLParser):
     
         # can not get these.
         current_item['leech'] = -1
-        current_item['engine_url'] = url
+        current_item['engine_url'] =URL
 
         def handle_starttag(self, tag, attrs):
             params = dict(attrs)
@@ -51,12 +54,17 @@ class eztvHtmlParser(HTMLParser):
                 a = re.compile(r' \[').split(params.get('title'))[0]
                 self.current_item['name'] = a
                 # logging.debug("Params: %s" % params)
-                
+            
+            if myTag == self.TD and params.get('class') == 'forum_thread_post_end' and params.get('align') == 'center':
+                globalResponse.append(dict(self.current_item))
+                self.inTable = False
+                self.inTableRow = False
                 
 
         def handle_data(self, data):
             if self.inTableRow and (data.endswith('MB') or data.endswith('GB') or data.endswith('KB')):
                 self.current_item['size'] = data
+                print(data)
             #     pass
 
             if self.inTableRow and (data.isalnum() or (data == '-')):
@@ -79,7 +87,8 @@ class eztvHtmlParser(HTMLParser):
                 self.inTable = False
             
             if self.inTable:
-                response.append(self.current_item)
+                # response.append(self.current_item)
+                print(len(globalResponse))
             elif not self.inTable:
                 # print('this is response',response)
                 # logging.debug('ending')
@@ -89,10 +98,10 @@ class eztvHtmlParser(HTMLParser):
 
 
 class eztv(object):
-    def __init__(self,**parameter_list):
-        logging.debug("Class Initiated")
-        self.name = "eztv"
-        self.supported_categories = {'tv': 'tv', 'all' : 'all'}
+    logging.debug("Class Initiated")
+    name = "EZTV"
+    supported_categories = {'tv': 'tv', 'all': 'all'}
+    url = 'https://eztv.ag/'
 
     def search(self,what,cat='all'):
         logging.debug("Searching")
@@ -101,6 +110,11 @@ class eztv(object):
         eztvParser = eztvHtmlParser()
         eztvHtml = retrieve_url(query)
         eztvParser.feed(eztvHtml)
-        for k in response:
+        for k in globalResponse:
             prettyPrinter(k)
         eztvParser.close()
+
+
+if __name__ == '__main__':
+    z = eztv()
+    z.search('Acre', 'all')
