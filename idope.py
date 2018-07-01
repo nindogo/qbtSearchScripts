@@ -1,9 +1,12 @@
-# Version 0.4
+#VERSION: 0.2
+#AUTHORS: nindogo
 
+import re
 import logging
+import copy
 
-# logging.basicConfig(level=logging.INFO)
-# logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger(__name__)
 
 try:
     # python3
@@ -13,181 +16,95 @@ except ImportError:
     from HTMLParser import HTMLParser
 # qBt
 from novaprinter import prettyPrinter
-from helpers import retrieve_url 
-# others
+from helpers import retrieve_url, download_file
+#others
 import re
 
-BASES = 1024
-SIZES = {"KB": BASES, "MB": BASES**2, "GB": BASES**3}
-URL = 'https://idope.se/torrent-list/'
-URL0 = 'https://idope.se/'
-globalResults = []
-globalResults.clear()
+URL = "https://eztv.ag"
+globalResponse=[]
 
 
 
-class idopeHTMLParser(HTMLParser):
-    logging.debug('parser initiated')
-    #Variables will be added here
-    A, TD, TR, HREF, TABLE, DIV, INPUT = (
-         'a', 'td', 'tr', 'href', 'table', 'div', 'input')
-    current_row = {}
-    current_page = []
-    magnet_trackers = str()
-    totalPages = int()
-    desc_link = str()
-    inRecordRow = False
-    theTopRecords = False
-    theBottonRecords = False
-    canGetSize = False
-    canGetSeeds = False
-    canGetName =False
-    inHidepage = False
-    URL = 'https://idope.se'
+class eztvHtmlParser(HTMLParser):
+        A, TD, TR, HREF, TABLE, SCRIPT= ('a', 'td', 'tr', 'href', 'table', 'script')
+        inTableRow = False
+        inTable = False
+        current_item = {}
+        url = URL
+        # responseCount
+        # response= []
+    
+        # can not get these.
+        current_item['leech'] = -1
+        current_item['engine_url'] =URL
 
-    # def __init__(self, res=[]):
-    #     try:
-    #         super().__init__()
-    #     except:
-    #         HTMLParser.__init__(self)
-    #     current_page = res
+        def handle_starttag(self, tag, attrs):
+            params = dict(attrs)
+            myTag = tag
+            
+            if (params.get('class') == 'forum_header_border' and params.get('name') == 'hover'):
+                self.inTableRow = True
+                self.inTable = True
 
-    #These two are already known
-    current_row['leech'] = -1
-    current_row['engine_url'] = URL0
+            if myTag == self.A and self.inTableRow and params.get('class') == 'magnet':
+                self.current_item['link'] = params.get('href')
+                
+            if myTag == self.A and self.inTableRow and params.get('class') == 'epinfo':
+                self.current_item['desc_link'] = self.url + params.get('href')
+                a = re.compile(r' \[').split(params.get('title'))[0]
+                self.current_item['name'] = a
+                # logging.debug("Params: %s" % params)
+            
+            if myTag == self.TD and params.get('class') == 'forum_thread_post_end' and params.get('align') == 'center':
+                globalResponse.append(dict(self.current_item))
+                self.inTable = False
+                self.inTableRow = False
+                
 
-    def handle_starttag(self,tag,attrs):
-        myTag = tag
-        params = dict(attrs)
-        
-        #get Torrent Trackers
-        if myTag == 'input' and params.get('id') == 'hidetrack' and params.get('style') == 'display:none':
-            self.magnet_trackers = params.get('value')
-            logging.debug('The trackers have been entred {}'.format(self.magnet_trackers))
-        
-        #Reading a row of responses starts below.
-        elif myTag == self.DIV and params.get('class') == 'resultdiv':
-            self.inRecordRow = True
-            logging.debug('Entered a row now')
+        def handle_data(self, data):
+            if self.inTableRow and (data.endswith('MB') or data.endswith('GB') or data.endswith('KB')):
+                self.current_item['size'] = data
+                print(data)
+            #     pass
 
-        elif myTag == self.DIV and self.inRecordRow and params.get('class') == 'resultdivtop':
-            self.theTopRecords = True
-        
-        #getting desc_link
-        elif myTag == self.A and self.theTopRecords and self.inRecordRow:
-            self.desc_link = ('https://idope.se' + params.get('href'))
-            self.current_row['desc_link'] = self.desc_link
-            logging.debug('desc_link :{}'.format(self.desc_link))
-            # print('the description link is',self.desc_link)
+            if self.inTableRow and (data.isalnum() or (data == '-')):
+                if data.isalnum():
+                    self.current_item['seeds'] = int(data)
+                elif data == '-':
+                    self.current_item['seeds'] = 0
 
-        #Got both the disc_url and some input for link now move on to the bottom.
-        elif myTag == self.DIV and self.theTopRecords and self.inRecordRow and params.get('class') == 'resultdivbotton':
-            self.theTopRecords = False
-            self.theBottonRecords = True
+            # if self.inTableRow and (data.endswith('[eztv]')):
+            #     self.current_item['name'] = data
 
-        #get the size
-        elif myTag == self.DIV and self.theBottonRecords and self.inRecordRow and params.get('class') == 'resultdivbottonlength':
-            self.canGetSize = True
-        
-        #get the seeds
-        elif  myTag == self.DIV and self.theBottonRecords and self.inRecordRow and params.get('class') == 'resultdivbottonseed':
-            self.canGetSeeds = True
-        
-        #get the name
-        elif myTag == self.DIV and self.theBottonRecords and self.inRecordRow and params.get('class') == 'hideinfohash' and 'hidename' in params.get('id'):
-            self.canGetName =True
+        def handle_endtag(self, tag):
+            myTag = tag
+            if self.inTableRow and myTag == self.TR:
+                self.inTableRow = False
+                # prettyPrinter(self.current_item)
+                # print(len(self.current_item))'
 
-        elif myTag == self.DIV and params.get('class') == 'magneticdiv' and self.inRecordRow and self.current_row :
-            # self.current_page.append(self.current_row)
-            globalResults.append(dict(self.current_row))
-            self.inRecordRow = False
-            # self.current_row.clear()
-            # logging.debug('Current row is now {}'.format(self.current_row))
-            # print('The length of results is now: ', len(globalResults))
+            if myTag == self.TABLE:
+                self.inTable = False
+            
 
-        elif myTag == self.DIV and params.get('id') == 'hidepage':
-            self.inHidepage = True
+class eztv(object):
+    logging.debug("Class Initiated")
+    name = "EZTV"
+    supported_categories = {'tv': 'tv', 'all': 'all'}
+    url = 'https://eztv.ag/'
 
-
-    def handle_data(self, data):
-        if self.canGetSize and self.theBottonRecords and self.inRecordRow:
-            logging.debug(data)
-            # self.current_row['size'] = data.replace(u'\xa0', u' ')
-            # print(data)
-            # try:
-            #     num, power = data.split(u"\xa0")
-            #     # print(power)
-            #     data = int(float(num) * SIZES.get(power, 1))
-            # except ValueError:
-            #     data = 0
-            self.current_row['size'] = data
-            logging.debug('the size is: {}'.format(data))
-            self.canGetSize = False
-
-        if self.canGetSeeds and self.theBottonRecords and self.inRecordRow:
-            self.current_row['seeds'] = data
-            self.canGetSeeds = False
-        
-        #Now that we have the name - we can get the link
-        if self.theBottonRecords and self.inRecordRow and self.canGetName:
-            self.current_row['name'] = data
-            logging.debug(data)
-            self.canGetName = False
-            self.current_row['link'] = 'magnet:?xt=urn:btih:' + self.desc_link.split('/')[5] + '&dn=' + data + self.magnet_trackers
-
-
-    def handle_comment(self,data):
-        if self.inHidepage:
-            pn =(re.findall(r'\d+', data))
-            for q in pn:
-                # print(q)
-                self.totalPages = q
-            # print(re.fullmatch(r'\d+',data))
-            self.inHidepage = False
-
-
-class idope(object):
-    logging.debug('Class Initiated')
-    supported_categories= {
-        'all':''
-        ,'video':'2'
-        ,'movies':'1'
-        ,'tv':'3'
-        ,'games':'7'
-        ,'music':'6'
-        ,'anime':'4'
-        ,'apps':'8'
-        ,'books':'9'
-        ,'xxx':'5'
-        ,'others':'0'
-        }
-    pages = 1
-    name = 'iDope'
-    url = 'https://idope.se/'
-    current = {}
-    idope_parser = idopeHTMLParser()
-
-    def search(self, what='ncis', cat='all'):
-        logging.debug('Searching now')
-        query = what
-        curr_page = 1
-        
-        while ((curr_page < 101) and (curr_page <= int(self.pages))):
-            full_url = URL + query + '?p=' +  str(curr_page) + '&c=' + self.supported_categories[cat.lower()]
-            # logging.debug(full_url)
-            # print(full_url)
-            page_htm = retrieve_url(full_url)
-            self.idope_parser.feed(page_htm)
-            self.pages = self.idope_parser.totalPages
-            curr_page += 1
-        for current in globalResults:
-            # current = current_page
-            # print(current.get('name'))
-            prettyPrinter(current)
-        self.idope_parser.close()
+    def search(self,what,cat='all'):
+        logging.debug("Searching")
+        query = what.replace('%20','-')
+        query = ('https://eztv.ag/search/' + query)
+        eztvParser = eztvHtmlParser()
+        eztvHtml = retrieve_url(query)
+        eztvParser.feed(eztvHtml)
+        for k in globalResponse:
+            prettyPrinter(k)
+        eztvParser.close()
 
 
 if __name__ == '__main__':
-    idopeObject = idope
-    idope.search(idope, 'Acre', 'aniMe')
-    logging.debug('And now we are done')
+    z = eztv()
+    z.search('Acre', 'all')
