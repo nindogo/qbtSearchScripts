@@ -1,4 +1,4 @@
-# Version 0.4
+# Version 0.5
 # Author nindogo
 
 import logging
@@ -173,10 +173,11 @@ class idope(object):
             self.idope_parser.feed(page_htm)
             self.pages = self.idope_parser.totalPages
             curr_page += 1
-        for current in globalResults:
-            # current = current_page
-            # print(current.get('name'))
-            prettyPrinter(current)
+            for current in globalResults:
+                # current = current_page
+                # print(current.get('name'))
+                prettyPrinter(current)
+            globalResults.clear()
         self.idope_parser.close()
 
 
