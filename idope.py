@@ -1,4 +1,4 @@
-# Version 0.5
+# Version 0.6
 # Author nindogo
 
 import logging
@@ -125,7 +125,9 @@ class idopeHTMLParser(HTMLParser):
         if self.theBottonRecords and self.inRecordRow and self.canGetName:
             self.current_row['name'] = data
             logging.debug(data)
-            self.canGetName = False
+            if 'email protected' in data:
+                pass
+            else: self.canGetName = False
             self.current_row['link'] = 'magnet:?xt=urn:btih:' + self.desc_link.split('/')[5] + '&dn=' + data + self.magnet_trackers
 
 
