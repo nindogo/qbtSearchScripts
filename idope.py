@@ -1,4 +1,4 @@
-# Version 0.6
+# Version 0.7
 # Author nindogo
 
 import logging
@@ -123,12 +123,12 @@ class idopeHTMLParser(HTMLParser):
         
         #Now that we have the name - we can get the link
         if self.theBottonRecords and self.inRecordRow and self.canGetName:
-            self.current_row['name'] = data
-            logging.debug(data)
-            if 'email protected' in data:
-                pass
-            else: self.canGetName = False
-            self.current_row['link'] = 'magnet:?xt=urn:btih:' + self.desc_link.split('/')[5] + '&dn=' + data + self.magnet_trackers
+            # self.current_row['name'] = data
+            # logging.debug(data)
+            # if 'email protected' in data:
+            #     pass
+            # else: self.canGetName = False
+            self.current_row['link'] = 'magnet:?xt=urn:btih:' + self.desc_link.split('/')[5] + '&dn=' + self.current_row['name'] + self.magnet_trackers
 
 
     def handle_comment(self,data):
@@ -140,6 +140,9 @@ class idopeHTMLParser(HTMLParser):
             # print(re.fullmatch(r'\d+',data))
             self.inHidepage = False
 
+        if self.theTopRecords and self.inRecordRow:
+            pn = (re.findall(r'">(.+)<\/', data))
+            self.current_row['name'] = str(pn)[2:-3]
 
 class idope(object):
     logging.debug('Class Initiated')
