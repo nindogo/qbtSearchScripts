@@ -141,7 +141,7 @@ class idopeHTMLParser(HTMLParser):
             self.inHidepage = False
 
         if self.theTopRecords and self.inRecordRow:
-            pn = (re.findall(r'">(.+)<\/', data))
+            pn = (re.findall(r'">(.*)<\/', data))
             self.current_row['name'] = str(pn)[2:-3]
 
 class idope(object):
