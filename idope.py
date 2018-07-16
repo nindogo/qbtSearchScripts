@@ -142,7 +142,7 @@ class idopeHTMLParser(HTMLParser):
 
         if self.theTopRecords and self.inRecordRow:
             pn = (re.findall(r'">(.*)<\/', data))
-            self.current_row['name'] = str(pn)[2:-3]
+            self.current_row['name'] = str(pn)[2:-3].replace(r'|','')
 
 class idope(object):
     logging.debug('Class Initiated')
