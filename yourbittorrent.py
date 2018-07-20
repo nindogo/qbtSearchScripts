@@ -14,7 +14,7 @@ class yourBitParser(HTMLParser):
     A, TD, TR, HREF, TABLE, DIV, INPUT, BODY = (
          'a', 'td', 'tr', 'href', 'table', 'div', 'input', 'body')
     GET_NUM_RESULTS = re.compile(r'<\/b> of <b>(\d*)<\/b> torrents found for "')
-    GET_NAME_RE = re.compile(r'<div class="col-6"><table class="table table-striped"><thead><tr class="bg-danger"><th class="text-white" colspan=2><b>(.*)<\/b><\/td><\/tr><\/thead><tr><td')
+    GET_NAME_RE = re.compile(r'<!DOCTYPE html><html lang="en-US"><head><title>(.*)Torrent Download</title><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1')
     GET_HASH_RE = re.compile(r'<\/td><\/tr><tr><td><b>Hash<\/td><td>(.*)<\/td><\/tr><tr><td valign=top><b>Rating<\/td><td id="')
     TRACKERS = (r'&tr=http%3a%2f%2ftracker.trackerfix.com%3a80%2fannounce&tr=udp%3a%2f%2f9.rarbg.to%3a2710%2fannounce&tr=udp%3a%2f%2fcoppersurfer.tk%3a6969%2fannounce&tr=udp%3a%2f%2feddie4.nl%3a6969%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969&tr=udp%3a%2f%2fglotorrents.pw%3a6969%2fannounce&tr=udp%3a%2f%2fopen.demonii.com%3a1337&tr=udp%3a%2f%2fp4p.arenabg.ch%3a1337%2fannounce&tr=udp%3a%2f%2ftorrent.gresille.org%3a80%2fannounce&tr=udp%3a%2f%2ftracker.aletorrenty.pl%3a2710%2fannounce&tr=udp%3a%2f%2ftracker.coppersurfer.tk%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.glotorrents.com%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.internetwarriors.net%3a1337&tr=udp%3a%2f%2ftracker.leechers-paradise.org%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.openbittorrent.com%3a80%2fannounce&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2fzer0day.ch%3a1337%2fannounce&tr=udp%3a%2f%2ftracker.pirateparty.gr%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2ftracker.open-internet.nl%3a6969%2fannounce&tr=%20udp%3a%2f%2fmgtracker.org%3a6969%2fannounce')
 
@@ -30,9 +30,6 @@ class yourBitParser(HTMLParser):
     def handle_starttag (self,tag,attrs):
         myTag = tag
         params = dict(attrs)
-
-
-
 
         if myTag == self.TD and (params.get('class') == 'v' or params.get('class') == 'n'):
             self.inHREFCELL = True
@@ -72,9 +69,6 @@ class yourBitParser(HTMLParser):
             self.current_record['leech'] = data
             self.canGetLeech = False
             self.current_record['engine_url'] = URL
-        
-
-        
 
     def handle_endtag(self,tag):
         myTag = tag
@@ -85,9 +79,6 @@ class yourBitParser(HTMLParser):
                 self.current_record.clear()
             else:
                 self.current_record.clear()
-        
-
-
 
 class yourbittorrent(object):
     url = 'https://yourbittorrent.com'
@@ -103,7 +94,6 @@ class yourbittorrent(object):
         ,'books':'8'
         ,'adult':'7'
     }
-    
 
     def __init__(self):
         pass
@@ -122,7 +112,6 @@ class yourbittorrent(object):
                 total_records = re.findall(a.GET_NUM_RESULTS, b)[0]
             except IndexError:
                 quit()
-
 
             a.feed(b)
             for each_record in the_results:
