@@ -1,5 +1,5 @@
-# Version 0.7
-# Author nindogo
+#VERSION: 0.8
+#AUTHORS: nindogo
 
 import logging
 
