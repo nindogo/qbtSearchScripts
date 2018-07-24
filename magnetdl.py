@@ -14,7 +14,7 @@ class magnetdl(object):
     url = "http://www.magnetdl.com/"
     name = "MagnetDL"
     result_page_match = re.compile(
-        r'<td\sclass="m"><a\shref="(magnet.*?)"\stitle=".*?class="n"><a\shref="(.*?)"\stitle="(.*?)">.*?<td\sclass="t.">.*?</td><td>.*?</td><td>(.*?)</td><td\sclass="s">(.*?)</td><td\sclass="l">(.*?)</td>')
+        '<td\sclass="m"><a\shref="(magnet.*?)"\stitle=".*?class="n"><a\shref="(.*?)"\stitle="(.*?)">.*?<td\sclass="t.">.*?</td><td>.*?</td><td>(.*?)</td><td\sclass="s">(.*?)</td><td\sclass="l">(.*?)</td>')
     total_results_num = re.compile(
         r'<div id="footer">Found <strong>(.*)<\/strong> Magnet Links for <i>')
 
