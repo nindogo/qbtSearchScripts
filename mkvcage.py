@@ -1,4 +1,4 @@
-#VERSION: 1.2
+#VERSION: 1.3
 #AUTHORS: hoanns, nindogo
 # movie and tv show site
 # Will only parse the first search result site, sorry
@@ -19,8 +19,7 @@ class mkvcage(object):
                             'movies': True,
                             'tv': True}
     games_to_parse = 10
-    result_page_match = re.compile(r'<h2 class="entry-title"><a href="https:\/\/(.*?)"')
-
+    result_page_match = re.compile(r'<h2 class="entry-title"><a href="https:\/\/(.*?)"')    
 
     def handle_page(self, url):
         data = retrieve_url(url)
@@ -30,15 +29,16 @@ class mkvcage(object):
         except IndexError:
             size = -1
         try:
-            dl_match = re.compile(r'<pre><strong>Movie Title:<\/strong>(.+)\n')
+            dl_match = re.compile(r'<title>(.+)<\/title>')
             dl = dl_match.findall(data)[0].replace('|','').replace('\r','')
         except IndexError:
             return
         try:
-            ln_match = re.compile(r'<a class="buttn torrent" href="(.+)">Download Torrent<\/a><\/center><\/p>\n<')
-            ln = self.url + ln_match.findall(data)[0]
+            magnet_match = re.compile(r'href="magnet:\?xt=urn:btih(.+)">MAGNET</a>',  re.I)
+            ln = r'magnet:?xt=urn:btih' + magnet_match.findall(data)[0] + '&dn=' + dl
         except IndexError:
-            return
+            ln_match = re.compile(r'href="\/torrents(.+)\.torrent"', re.I)
+            ln = self.url + '/torrents' + ln_match.findall(data)[0] + '.torrent'
         result = {
             'name': dl,
             'size': size,
@@ -48,6 +48,7 @@ class mkvcage(object):
             'leech': -1,
             'engine_url': self.url
         }
+
         prettyPrinter(result)
         quit()
 
