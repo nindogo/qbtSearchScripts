@@ -15,12 +15,12 @@ from helpers import retrieve_url
 class mkvcage(object):
     url = "https://www.mkvcage.ws"
     name = "MkvCage"
-    games_to_parse = 10
-    result_page_match = re.compile(r'<h2 class="entry-title"><a href="https:\/\/(.*?)"')
-
     supported_categories = {'all': True,
                             'movies': True,
                             'tv': True}
+    games_to_parse = 10
+    result_page_match = re.compile(r'<h2 class="entry-title"><a href="https:\/\/(.*?)"')
+
 
     def handle_page(self, url):
         data = retrieve_url(url)
