@@ -1,4 +1,4 @@
-#VERSION: 1.3
+#VERSION: 1.4
 #AUTHORS: Vikas Yadav (https://github.com/v1k45 | http://v1k45.com), nindogo
 
 # Redistribution and use in source and binary forms, with or without
@@ -48,9 +48,6 @@ class LeetxParser(HTMLParser):
     inside_row = False
 
     A, TBODY, TR, TD, SPAN = ('a', 'tbody', 'tr', 'td', 'span')
-    # DOWNLOAD_PATTERN = re.compile(r'<a class\="(.*) btn-(.*)" target\="_blank" href\="(.*)"><span class\="icon"><i class\="flaticon-torrent-download"></i></span>ITORRENTS MIRROR</a>')  # noqa
-    DOWNLOAD_PATTERN = re.compile(r'magnet:(.+)announce\"')  # noqa
-
 
     def handle_starttag(self, tag, attrs):
         # are we inside the results table body or not.
@@ -65,17 +62,11 @@ class LeetxParser(HTMLParser):
         # for torrent name and link
         link = attrs.get('href', '')
         if self.inside_tbody and tag == self.A and link.startswith('/torrent'):  # noqa
-            # self.current_result['link'] = LEETX_DOMAIN + link
+            self.current_result['link'] = LEETX_DOMAIN + link
             self.current_result['desc_link'] = LEETX_DOMAIN + link
             self.current_result['engine_url'] = LEETX_DOMAIN
             self.current_item = 'name'
-            torrent_page = retrieve_url(self.current_result['desc_link'])
-            torrent_link_match = self.DOWNLOAD_PATTERN.search(torrent_page)
-            if torrent_link_match and torrent_link_match.groups():
-                torrent_file = torrent_link_match.groups()[0] #.replace("http", "https")  # noqa
-                torrent_file = 'magnet:' + torrent_file + 'announce'
-                self.current_result['link'] = torrent_file
- 
+
         # to ignore uploader name attached to the torrent size in span tag
         if tag == self.SPAN:
             self.current_item = None
@@ -118,7 +109,7 @@ class LeetxParser(HTMLParser):
 
 
 PAGINATION_PATTERN = re.compile(r'<li class="last"><a href="/search/.+/(\d+)/">Last</a></li>')  # noqa
-DOWNLOAD_PATTERN = re.compile(r'magnet:(.+)announce\"')  # noqa
+DOWNLOAD_PATTERN = re.compile(r'<a class\="(.*) btn-(.*)" target\="_blank" href\="(.*)"><span class\="icon"><i class\="flaticon-torrent-download"></i></span>ITORRENTS MIRROR</a>')  # noqa
 
 
 class leetx(object):
@@ -141,7 +132,7 @@ class leetx(object):
         torrent_page = retrieve_url(info)
         torrent_link_match = DOWNLOAD_PATTERN.search(torrent_page)
         if torrent_link_match and torrent_link_match.groups():
-            torrent_file = torrent_link_match.groups()[2].replace("http", "https")  # noqa
+            torrent_file = torrent_link_match.groups()[2]  # noqa
             print(download_file(torrent_file))
         else:
             print('')
@@ -179,7 +170,3 @@ class leetx(object):
             data = retrieve_url(search_url + str(current_page) + "/")
             parser.feed(data)
             parser.close()
-
-if __name__ == '__main__':
-    a = leetx()
-    a.search('fire')
