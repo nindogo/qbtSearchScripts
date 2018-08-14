@@ -1,5 +1,5 @@
-# VERSION 0.91
-# AUTHOR nindogo
+#VERSION: 0.91
+#AUTHORS: nindogo
 
 import threading
 import logging
@@ -88,7 +88,7 @@ class idopeHTMLParser(threading.Thread, HTMLParser):
             self.canGetName =True
 
         elif myTag == self.DIV and params.get('class') == 'magneticdiv' and self.inRecordRow and self.current_row :
-            # prettyPrinter(self.current_row)
+            prettyPrinter(self.current_row)
             self.inRecordRow = False
             logging.debug('Current row is now {}'.format(self.current_row))
 
