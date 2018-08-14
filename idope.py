@@ -1,39 +1,25 @@
-# Version 0.7
-# Author nindogo
+# VERSION 0.91
+# AUTHOR nindogo
 
+import threading
 import logging
 
-# logging.basicConfig(level=logging.INFO)
-# logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+logging.getLogger(__name__)
 
-try:
-    # python3
-    from html.parser import HTMLParser
-except ImportError:
-    # python2
-    from HTMLParser import HTMLParser
-# qBt
-from novaprinter import prettyPrinter
-from helpers import retrieve_url 
-# others
 import re
-
-BASES = 1024
-SIZES = {"KB": BASES, "MB": BASES**2, "GB": BASES**3}
-URL = 'https://idope.se/torrent-list/'
-URL0 = 'https://idope.se/'
-globalResults = []
-globalResults.clear()
+from html.parser import HTMLParser
+from helpers import retrieve_url
+from novaprinter import prettyPrinter
 
 
-
-class idopeHTMLParser(HTMLParser):
+class idopeHTMLParser(threading.Thread, HTMLParser):
+    page_link = threading.local()
+    A, TD, TR, HREF, TABLE, DIV, INPUT, BODY = (
+        'a', 'td', 'tr', 'href', 'table', 'div', 'input', 'body')
     logging.debug('parser initiated')
-    #Variables will be added here
-    A, TD, TR, HREF, TABLE, DIV, INPUT = (
-         'a', 'td', 'tr', 'href', 'table', 'div', 'input')
+    
     current_row = {}
-    current_page = []
     magnet_trackers = str()
     totalPages = int()
     desc_link = str()
@@ -44,18 +30,21 @@ class idopeHTMLParser(HTMLParser):
     canGetSeeds = False
     canGetName =False
     inHidepage = False
-    URL = 'https://idope.se'
+    URL = 'https://idope.cc'
+    def __init__(self, url):
+        self.page_link = url
+        HTMLParser.__init__(self)
+        threading.Thread.__init__(self)
 
-    # def __init__(self, res=[]):
-    #     try:
-    #         super().__init__()
-    #     except:
-    #         HTMLParser.__init__(self)
-    #     current_page = res
+    def run(self):
+        # print(self.page_link)
+        self.feed(retrieve_url(self.page_link))
+
+    
 
     #These two are already known
     current_row['leech'] = -1
-    current_row['engine_url'] = URL0
+    current_row['engine_url'] = URL
 
     def handle_starttag(self,tag,attrs):
         myTag = tag
@@ -76,7 +65,7 @@ class idopeHTMLParser(HTMLParser):
         
         #getting desc_link
         elif myTag == self.A and self.theTopRecords and self.inRecordRow:
-            self.desc_link = ('https://idope.se' + params.get('href'))
+            self.desc_link = ('https://idope.cc' + params.get('href'))
             self.current_row['desc_link'] = self.desc_link
             logging.debug('desc_link :{}'.format(self.desc_link))
             # print('the description link is',self.desc_link)
@@ -99,12 +88,9 @@ class idopeHTMLParser(HTMLParser):
             self.canGetName =True
 
         elif myTag == self.DIV and params.get('class') == 'magneticdiv' and self.inRecordRow and self.current_row :
-            # self.current_page.append(self.current_row)
-            globalResults.append(dict(self.current_row))
+            # prettyPrinter(self.current_row)
             self.inRecordRow = False
-            # self.current_row.clear()
-            # logging.debug('Current row is now {}'.format(self.current_row))
-            # print('The length of results is now: ', len(globalResults))
+            logging.debug('Current row is now {}'.format(self.current_row))
 
         elif myTag == self.DIV and params.get('id') == 'hidepage':
             self.inHidepage = True
@@ -137,7 +123,13 @@ class idopeHTMLParser(HTMLParser):
 
         if self.theTopRecords and self.inRecordRow:
             pn = (re.findall(r'">(.*)<\/', data))
-            self.current_row['name'] = str(pn)[2:-3].replace(r'|','')
+            self.current_row['name'] = str(pn)[2:-3].replace(r'|', '')
+            
+    def handle_endtag(self, tag):
+        myTag = tag
+        if myTag == self.BODY:
+            quit()
+
 
 class idope(object):
     logging.debug('Class Initiated')
@@ -156,32 +148,28 @@ class idope(object):
         }
     pages = 1
     name = 'iDope'
-    url = 'https://idope.se/'
+    url = 'https://idope.cc/'
     current = {}
-    idope_parser = idopeHTMLParser()
+    SEE_TOTAL_PAGES = re.compile(r'<!--<div\s+id="hidemaxpage">(\d+)<\/div>-->')
 
     def search(self, what='ncis', cat='all'):
         logging.debug('Searching now')
         query = what
         curr_page = 1
-        
-        while ((curr_page < 101) and (curr_page <= int(self.pages))):
-            full_url = URL + query + '?p=' +  str(curr_page) + '&c=' + self.supported_categories[cat.lower()]
-            # logging.debug(full_url)
-            # print(full_url)
-            page_htm = retrieve_url(full_url)
-            self.idope_parser.feed(page_htm)
-            self.pages = self.idope_parser.totalPages
+        first_page_url = 'https://idope.cc/torrent-list/' + query + '?p=' + str(curr_page) + '&c=' + self.supported_categories[cat.lower()]
+        first_page_htm = retrieve_url(first_page_url)
+        self.pages = self.SEE_TOTAL_PAGES.findall(first_page_htm)[0]
+
+        while ((curr_page < 101) and (curr_page <= int(self.pages)) and (self.pages != 0)):
+            full_url = 'https://idope.cc/torrent-list/' + query + '?p=' +  str(curr_page) + '&c=' + self.supported_categories[cat.lower()]
+            logging.debug(full_url)
+            idope_parser = idopeHTMLParser(full_url)
+
+            idope_parser.start()
             curr_page += 1
-            for current in globalResults:
-                # current = current_page
-                # print(current.get('name'))
-                prettyPrinter(current)
-            globalResults.clear()
-        self.idope_parser.close()
 
 
 if __name__ == '__main__':
     idopeObject = idope
-    idope.search(idope, 'Acre', 'aniMe')
+    idope.search(idope, 'minute', 'all')
     logging.debug('And now we are done')
