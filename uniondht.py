@@ -114,8 +114,8 @@ class uniondht(object):
         torrent_list = re.findall(self.GET_TORRENT, torrent_page)
         torrent_link = str((torrent_list)[0])
         a = get_page_data_encoded(torrent_link)
-        temp_file = tempfile.NamedTemporaryFile(delete=False)
-        temp_file.write(a)
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(a)
         print(temp_file.name + ' ' + info)
 
     def search(self, what='ncis', cat='all'):
