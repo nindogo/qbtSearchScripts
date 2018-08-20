@@ -1,4 +1,4 @@
-#VERSION: 0.02
+#VERSION: 0.03
 #AUTHORS: nindogo
 
 import threading
@@ -53,7 +53,7 @@ class unionDHTParser(threading.Thread):
             logging.debug('Preparing to PrettyPrint {}'.format(self.each_result[1]))
             self.b = dict()
             self.b['desc_link'] = 'http://uniondht.org' + self.each_result[0]
-            self.b['name'] = self.each_result[1]
+            self.b['name'] = self.each_result[1].replace('<wbr>','')
             self.b['link'] = 'http://uniondht.org' + self.each_result[2]
             self.b['size'] = self.each_result[3].replace(' ','').replace('&nbsp;',' ')
             self.b['seeds'] = self.each_result[4]
@@ -138,5 +138,7 @@ class uniondht(object):
 if __name__ == '__main__':
     logging.info('Running script directly')
     a = uniondht()
-    a.search('ncis','music')
+    # a.search('ncis', 'music')
+    a.download_torrent('http://uniondht.org/topic/41952-ncis-official-soundtrack.html')
+    
     pass
