@@ -1,4 +1,4 @@
-#VERSION: 0.03
+#VERSION: 0.04
 #AUTHORS: nindogo
 
 import threading
@@ -26,9 +26,10 @@ class unionDHTParser(threading.Thread):
 
     SEE_ALL = re.compile(r'tLink"\s+?href="(.+?)"><b>(.*?)<\/b>.+?tr-dl" href="(.+?)">(.+?)<\/a>.+?seedmed bold">(\d)<\/td>.+?leechmed" title="Личеров"><b>(\d)',re.S)
 
-    def __init__(self, url):
+    def __init__(self, url, base_url):
         logging.info('Initiating Parser')
         self.page_link = url
+        self.base_url = base_url
         threading.Thread.__init__(self)
         logging.info('Parser Initiation complete')
     
@@ -54,11 +55,11 @@ class unionDHTParser(threading.Thread):
             self.b = dict()
             self.b['desc_link'] = 'http://uniondht.org' + self.each_result[0]
             self.b['name'] = self.each_result[1].replace('<wbr>','')
-            self.b['link'] = 'http://uniondht.org' + self.each_result[2]
+            self.b['link'] = self.base_url + self.each_result[2]
             self.b['size'] = self.each_result[3].replace(' ','').replace('&nbsp;',' ')
             self.b['seeds'] = self.each_result[4]
             self.b['leech'] = self.each_result[5]
-            self.b['engine_url'] = 'http://uniondht.org'
+            self.b['engine_url'] = self.base_url
             logging.debug('ready to prettyPrint record: {}'.format(self.b['name']))
             prettyPrinter(self.b)
 
@@ -87,6 +88,7 @@ def get_page_data_encoded(url):
         # new_html = codecs.decode(html, encoding='cp1251')
         # new_html = html.decode('cp1251')
         return(new_html)
+
 class uniondht(object):
     logging.info('Class Starting')
     supported_categories = {'all': ''
@@ -98,25 +100,15 @@ class uniondht(object):
                             , 'games': '&f%5B%5D=34&f%5B%5D=59&f%5B%5D=58&f%5B%5D=57&f%5B%5D=56&f%5B%5D=55&f%5B%5D=54&f%5B%5D=53&f%5B%5D=902&f%5B%5D=35&f%5B%5D=36&f%5B%5D=65&f%5B%5D=64&f%5B%5D=63&f%5B%5D=62&f%5B%5D=37&f%5B%5D=38&f%5B%5D=69&f%5B%5D=68&f%5B%5D=67&f%5B%5D=66&f%5B%5D=39&f%5B%5D=74&f%5B%5D=73&f%5B%5D=72&f%5B%5D=71&f%5B%5D=70&f%5B%5D=40&f%5B%5D=78&f%5B%5D=77&f%5B%5D=76&f%5B%5D=75&f%5B%5D=41&f%5B%5D=43&f%5B%5D=81&f%5B%5D=44&f%5B%5D=45&f%5B%5D=91&f%5B%5D=90&f%5B%5D=89&f%5B%5D=88&f%5B%5D=87&f%5B%5D=86&f%5B%5D=85&f%5B%5D=84&f%5B%5D=83&f%5B%5D=82&f%5B%5D=571&f%5B%5D=46&f%5B%5D=100&f%5B%5D=99&f%5B%5D=98&f%5B%5D=97&f%5B%5D=96&f%5B%5D=95&f%5B%5D=101&f%5B%5D=102&f%5B%5D=103&f%5B%5D=104&f%5B%5D=105&f%5B%5D=106'
     }
     name = 'UnionDHT'
-    url = 'http://uniondht.org/'
+    url = 'http://uniondht.org'
     MAX_PAGES_REQUEST = re.compile(r'<p style="float: left">.*? <b>\d</b> .*? <b>(\d+)</b></p>')
-    SEARCH_TEMPLATE = 'http://uniondht.org/tracker.php?o=10&nm='
+    SEARCH_TEMPLATE = url + '/tracker.php?o=10&nm='
     AFTER_FINAL_PAGE = re.compile(r'<td class="row1 tCenter pad_8" colspan="12">.*?<\/td>')
     GET_TORRENT = re.compile(r'<p><a href="(.+?)" class="for_adblock">')
 
 
     def __init__(self):
         pass
-
-    def download_torrent(self, info):
-        logging.info('Starting download Torrent')
-        torrent_page = get_page_data(info)
-        torrent_list = re.findall(self.GET_TORRENT, torrent_page)
-        torrent_link = str((torrent_list)[0])
-        a = get_page_data_encoded(torrent_link)
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            temp_file.write(a)
-        print(temp_file.name + ' ' + info)
 
     def search(self, what='ncis', cat='all'):
         logging.info('Beginning the search for {}'.format(what))
@@ -127,7 +119,7 @@ class uniondht(object):
         total_pages = int(re.findall(self.MAX_PAGES_REQUEST, page_url)[0])
         while page_offset < (total_pages * 50):
             page_link = self.SEARCH_TEMPLATE + '&nm=' + str(ati_what) + '&start=' + str(page_offset) + self.supported_categories[cat.lower()]
-            a = unionDHTParser(page_link)
+            a = unionDHTParser(page_link, self.url)
             a.start()
             page_offset += 50
             logging.debug('Next query will start on page: {}'.format(page_offset))
@@ -139,6 +131,6 @@ if __name__ == '__main__':
     logging.info('Running script directly')
     a = uniondht()
     # a.search('ncis', 'music')
-    a.download_torrent('http://uniondht.org/topic/41952-ncis-official-soundtrack.html')
+    a.download_torrent(a.url + '/topic/41952-ncis-official-soundtrack.html')
     
     pass
