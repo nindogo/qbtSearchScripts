@@ -1,175 +1,114 @@
-#VERSION: 0.91
-#AUTHORS: nindogo
+#VERSION 0.92
+#AUTHOR nindogo
 
-import threading
 import logging
-
-logging.basicConfig(level=logging.INFO)
-logging.getLogger(__name__)
 
 import re
 from html.parser import HTMLParser
 from helpers import retrieve_url
 from novaprinter import prettyPrinter
 
+logging.basicConfig(level=logging.INFO)
+logging.getLogger(__name__)
 
-class idopeHTMLParser(threading.Thread, HTMLParser):
-    page_link = threading.local()
-    A, TD, TR, HREF, TABLE, DIV, INPUT, BODY = (
-        'a', 'td', 'tr', 'href', 'table', 'div', 'input', 'body')
-    logging.debug('parser initiated')
-    
-    current_row = {}
-    magnet_trackers = str()
-    totalPages = int()
-    desc_link = str()
-    inRecordRow = False
-    theTopRecords = False
-    theBottonRecords = False
-    canGetSize = False
-    canGetSeeds = False
-    canGetName =False
-    inHidepage = False
-    URL = 'https://idope.cc'
-    def __init__(self, url):
-        self.page_link = url
-        HTMLParser.__init__(self)
-        threading.Thread.__init__(self)
 
-    def run(self):
-        # print(self.page_link)
-        self.feed(retrieve_url(self.page_link))
+class iDopeHTMLParser(HTMLParser):
+    A, TD, TR, HREF, TABLE, DIV, INPUT, BODY, HTML = (
+        'a', 'td', 'tr', 'href', 'table', 'div', 'input', 'body', 'html')
+    tracker_list = '&tr=http%3A%2F%2Fopen.trackerlist.xyz%3A80%2Fannounce&tr=udp%3A%2F%2Ft.opentracker.xyz%3A80%2Fannounce&tr=udp%3A%2F%2Fipv4.opentracker.xyz%3A80%2Fannounce&tr=udp%3A%2F%2Fbt.xxx-tracker.com%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=http%3A%2F%2Ft.nyaatracker.com%3A80%2Fannounce&tr=udp%3A%2F%2Fbigfoot1942.sektori.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.port443.xyz%3A6969%2Fannounce&tr=https%3A%2F%2Fopentracker.xyz%3A443%2Fannounce&tr=udp%3A%2F%2Ftracker.vanitycore.co%3A6969%2Fannounce&tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&tr=http%3A%2F%2Ftorrent.nwps.ws%3A80%2Fannounce&tr=udp%3A%2F%2Fopen.demonii.si%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.tfile.me%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=http%3A%2F%2Ftherightsize.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Fipv6.open-internet.nl%3A6969%2Fannounce&tr=udp%3A%2F%2Fthetracker.org%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.justseed.it%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker4.itzmx.com%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.open-internet.nl%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.com%3A2710%2Fannounce&tr=udp%3A%2F%2Fretracker.hotplug.ru%3A2710%2Fannounce&tr=http%3A%2F%2Fshare.camoe.cn%3A8080%2Fannounce&tr=udp%3A%2F%2Fpublic.popcorn-tracker.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.iamhansen.xyz%3A2000%2Fannounce&tr=http%3A%2F%2Fretracker.telecom.by%3A80%2Fannounce&tr=http%3A%2F%2Ftracker.corpscorp.online%3A80%2Fannounce&tr=https%3A%2F%2F2.track.ga%3A443%2Fannounce&tr=http%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&tr=udp%3A%2F%2Fipv6.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=http%3A%2F%2F0d.kebhana.mx%3A443%2Fannounce&tr=http%3A%2F%2Ftracker.city9x.com%3A2710%2Fannounce&tr=http%3A%2F%2Fretracker.mgts.by%3A80%2Fannounce&tr=https%3A%2F%2Fopen.trackerlist.org%3A443%2Fannounce&tr=https%3A%2F%2Ftracker.trackerlist.org%3A443%2Fannounce&tr=https%3A%2F%2Ftracker.fastdownload.xyz%3A443%2Fannounce&tr=udp%3A%2F%2Ftracker.swateam.org.uk%3A2710%2Fannounce&tr=udp%3A%2F%2Fdenis.stalker.upeer.me%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.msm8916.com%3A6969%2Fannounce&tr=udp%3A%2F%2Fzephir.monocul.us%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker1.itzmx.com%3A8080%2Fannounce&tr=udp%3A%2F%2Fmgtracker.org%3A6969%2Fannounce&tr=https%3A%2F%2Fcernet-tracker.appspot.com%3A443%2Fannounce&tr=http%3A%2F%2Ftracker.veryamt.com%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.dler.org%3A6969%2Fannounce&tr=http%3A%2F%2Fomg.wtftrackr.pw%3A1337%2Fannounce&tr=udp%3A%2F%2Fexplodie.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker2.itzmx.com%3A6961%2Fannounce'
+    curr_result = dict()
+    curr_page = list()
+    in_record_row = False
+    can_get_name = False
+    can_get_length = False
+    can_get_hash = False
+    url = 'https://idope.top'
 
-    
+    # SCAN_RESULT_PAGE = re.compile('<div class="resultdivtopname">(.+?)<\/div>.*?<div class="resultdivbottonlength">(.+?)<\/div>.*?<div class="resultdivbottonseed">(.+?)<\/div>.*?')
 
-    #These two are already known
-    current_row['leech'] = -1
-    current_row['engine_url'] = URL
-
-    def handle_starttag(self,tag,attrs):
+    def handle_starttag(self, tag, attrs):
         myTag = tag
         params = dict(attrs)
-        
-        #get Torrent Trackers
-        if myTag == 'input' and params.get('id') == 'hidetrack' and params.get('style') == 'display:none':
-            self.magnet_trackers = params.get('value')
-            logging.debug('The trackers have been entred {}'.format(self.magnet_trackers))
-        
-        #Reading a row of responses starts below.
-        elif myTag == self.DIV and params.get('class') == 'resultdiv':
-            self.inRecordRow = True
-            logging.debug('Entered a row now')
 
-        elif myTag == self.DIV and self.inRecordRow and params.get('class') == 'resultdivtop':
-            self.theTopRecords = True
-        
-        #getting desc_link
-        elif myTag == self.A and self.theTopRecords and self.inRecordRow:
-            self.desc_link = ('https://idope.cc' + params.get('href'))
-            self.current_row['desc_link'] = self.desc_link
-            logging.debug('desc_link :{}'.format(self.desc_link))
-            # print('the description link is',self.desc_link)
+        if myTag == self.DIV and params.get('class') == 'resultdiv':
+            self.in_record_row = True
+            self.can_get_hash = False
+            self.can_get_length = False
+            self.can_get_name = False
 
-        #Got both the disc_url and some input for link now move on to the bottom.
-        elif myTag == self.DIV and self.theTopRecords and self.inRecordRow and params.get('class') == 'resultdivbotton':
-            self.theTopRecords = False
-            self.theBottonRecords = True
+        elif self.in_record_row and myTag == self.DIV and params.get('class') == 'resultdivtopname':
+            self.can_get_name = True
 
-        #get the size
-        elif myTag == self.DIV and self.theBottonRecords and self.inRecordRow and params.get('class') == 'resultdivbottonlength':
-            self.canGetSize = True
-        
-        #get the seeds
-        elif  myTag == self.DIV and self.theBottonRecords and self.inRecordRow and params.get('class') == 'resultdivbottonseed':
-            self.canGetSeeds = True
-        
-        #get the name
-        elif myTag == self.DIV and self.theBottonRecords and self.inRecordRow and params.get('class') == 'hideinfohash' and 'hidename' in params.get('id'):
-            self.canGetName =True
+        elif self.in_record_row and myTag == self.DIV and params.get('class') == 'resultdivbottonlength':
+            self.can_get_length = True
 
-        elif myTag == self.DIV and params.get('class') == 'magneticdiv' and self.inRecordRow and self.current_row :
-            prettyPrinter(self.current_row)
-            self.inRecordRow = False
-            logging.debug('Current row is now {}'.format(self.current_row))
+        elif self.in_record_row and myTag == self.DIV and params.get('class') == 'resultdivbottonseed':
+            self.can_get_hash = True
 
-        elif myTag == self.DIV and params.get('id') == 'hidepage':
-            self.inHidepage = True
-
+        elif self.in_record_row and myTag == self.DIV and params.get('class') == 'magneticdiv':
+            self.in_record_row = False
 
     def handle_data(self, data):
-        if self.canGetSize and self.theBottonRecords and self.inRecordRow:
-            logging.debug(data)
-            self.current_row['size'] = data
-            logging.debug('the size is: {}'.format(data))
-            self.canGetSize = False
+        if self.can_get_name is True:
+            self.curr_result['name'] = str(data).strip()
+            self.can_get_name = False
 
-        if self.canGetSeeds and self.theBottonRecords and self.inRecordRow:
-            self.current_row['seeds'] = data
-            self.canGetSeeds = False
-        
-        #Now that we have the name - we can get the link
-        if self.theBottonRecords and self.inRecordRow and self.canGetName:
-            self.current_row['link'] = 'magnet:?xt=urn:btih:' + self.desc_link.split('/')[5] + '&dn=' + self.current_row['name'] + self.magnet_trackers
+        if self.can_get_length is True:
+            if data == 'N/A':
+                self.curr_result['size'] = -1
+            else:
+                self.curr_result['size'] = str(data).replace(',', '')
+            self.can_get_length = False
 
+        if self.can_get_hash is True:
+            self.curr_result['link'] = str('magnet:?xt=urn:btih:' +
+                                           data +
+                                           '&dn=' +
+                                           self.curr_result['name'] +
+                                           self.tracker_list
+                                           )
+            self.can_get_hash = False
+            self.curr_result['seeds'] = -1
+            self.curr_result['leech'] = -1
+            self.curr_result['desc_link'] = str(-1)
+            self.curr_result['engine_url'] = self.url
+            # prettyPrinter(self.curr_result)
+            # print(type(self.curr_result['size']))
+            self.curr_page.append(dict(self.curr_result))
+            self.curr_result.clear()
 
-    def handle_comment(self,data):
-        if self.inHidepage:
-            pn =(re.findall(r'\d+', data))
-            for q in pn:
-                # print(q)
-                self.totalPages = q
-            # print(re.fullmatch(r'\d+',data))
-            self.inHidepage = False
-
-        if self.theTopRecords and self.inRecordRow:
-            pn = (re.findall(r'">(.*)<\/', data))
-            self.current_row['name'] = str(pn)[2:-3].replace(r'|', '')
-            
     def handle_endtag(self, tag):
-        myTag = tag
-        if myTag == self.BODY:
-            quit()
+            myTag = tag
+            if myTag == self.BODY:
+                if len(self.curr_page) == 0:
+                    quit()
+
+                for each_record in self.curr_page:
+                    prettyPrinter(each_record)
+
+                self.curr_page.clear()
 
 
 class idope(object):
-    logging.debug('Class Initiated')
-    supported_categories= {
-        'all':''
-        ,'video':'2'
-        ,'movies':'1'
-        ,'tv':'3'
-        ,'games':'7'
-        ,'music':'6'
-        ,'anime':'4'
-        ,'software':'8'
-        ,'books':'9'
-        ,'xxx':'5'
-        ,'others':'0'
-        }
-    pages = 1
+    logging.debug('Started the iDope class')
+    url = 'https://idope.top'
     name = 'iDope'
-    url = 'https://idope.cc/'
-    current = {}
-    SEE_TOTAL_PAGES = re.compile(r'<!--<div\s+id="hidemaxpage">(\d+)<\/div>-->')
-
+    supported_categories = {
+        'all': ''}
+        
     def search(self, what='ncis', cat='all'):
         logging.debug('Searching now')
         query = what
-        curr_page = 1
-        first_page_url = 'https://idope.cc/torrent-list/' + query + '?p=' + str(curr_page) + '&c=' + self.supported_categories[cat.lower()]
-        first_page_htm = retrieve_url(first_page_url)
-        self.pages = self.SEE_TOTAL_PAGES.findall(first_page_htm)[0]
 
-        while ((curr_page < 101) and (curr_page <= int(self.pages)) and (self.pages != 0)):
-            full_url = 'https://idope.cc/torrent-list/' + query + '?p=' +  str(curr_page) + '&c=' + self.supported_categories[cat.lower()]
-            logging.debug(full_url)
-            idope_parser = idopeHTMLParser(full_url)
-
-            idope_parser.start()
-            curr_page += 1
+        for i in range(1, 1000, 1):
+            search_url = 'https://idope.top/s/' + query + '/page/' + str(i)
+            a = retrieve_url(search_url)
+            b = iDopeHTMLParser()
+            b.feed(a)
+            pass
 
 
 if __name__ == '__main__':
-    idopeObject = idope
-    idope.search(idope, 'minute', 'all')
-    logging.debug('And now we are done')
+    logging.debug('Running from file.')
+    a = idope()
+    a.search('csi')
