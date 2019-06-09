@@ -1,14 +1,12 @@
 # VERSION: 0.01
 # AUTHORS: nindogo (nindogo@gmail.com)
 
-# LICENSING INFORMATION
-
 import re
 import math
 import threading
 from helpers import retrieve_url
 from novaprinter import prettyPrinter
-# some other imports if necessary
+
 try:
     # Python 3
     from html.parser import HTMLParser
