@@ -1,10 +1,11 @@
-# VERSION: 0.01
+# VERSION: 0.02
 # AUTHORS: nindogo (nindogo@gmail.com)
 
 # LICENSING INFORMATION
 
 import re
 import math
+import threading
 from helpers import retrieve_url
 from novaprinter import prettyPrinter
 # some other imports if necessary
@@ -109,10 +110,13 @@ class torrentgalaxy(object):
         all_results = all_results_re.findall(webpage)[0]
         all_results = all_results.replace(' ', '')
         pages = math.ceil(int(all_results) / 50)
+        threads = []
         for page in range(1, pages):
             this_url = full_url + '&page=' + str(page)
-            # print(this_url)
-            self.do_search(this_url)
+            t = threading.Thread(args=(this_url), target=self.do_search)
+            threads.append(t)
+            t.start()
+            # self.do_search(this_url)
 
 
 if __name__ == '__main__':
