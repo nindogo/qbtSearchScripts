@@ -112,7 +112,7 @@ class torrentgalaxy(object):
         pages = math.ceil(int(all_results) / 50)
         threads = []
         for page in range(1, pages):
-            # this_url = full_url + '&page=' + str(page)
+            this_url = full_url + '&page=' + str(page)
             # t = threading.Thread(args=(this_url,), target=self.do_search)
             # threads.append(t)
             # t.start()
