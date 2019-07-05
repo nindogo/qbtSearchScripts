@@ -1,4 +1,4 @@
-# VERSION: 0.05
+# VERSION: 0.06
 # AUTHORS: nindogo (nindogo@gmail.com)
 
 # LICENSING INFORMATION
@@ -18,7 +18,7 @@ except ImportError:
 
 
 class torrentgalaxy(object):
-    url = 'https://torrentgalaxy.org/'
+    url = 'https://torrentgalaxy.to/'
     name = 'TorrentGalaxy'
     supported_categories = {
         'all': '',
@@ -37,7 +37,7 @@ class torrentgalaxy(object):
         count_div, = -1,
         get_size, get_seeds, get_leechs = False, False, False
         this_record = {}
-        url = 'https://torrentgalaxy.org'
+        url = 'https://torrentgalaxy.to'
 
         def handle_starttag(self, tag, attrs):
             if tag == self.DIV:
@@ -95,7 +95,7 @@ class torrentgalaxy(object):
 
     def search(self, what, cat='all'):
         query = str(what).replace(r' ', '+')
-        search_url = 'https://torrentgalaxy.org/torrents.php?'
+        search_url = 'https://torrentgalaxy.to/torrents.php?'
         full_url = \
             search_url + \
             self.supported_categories[cat.lower()] + \
