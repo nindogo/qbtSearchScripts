@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# coding:utf-8
 #VERSION 20201212
 #Author nindogo
 import json
