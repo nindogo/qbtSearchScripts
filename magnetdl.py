@@ -1,5 +1,5 @@
-#VERSION: 1.3
-#AUTHORS: hoanns,nindogo
+#VERSION: 1.4
+#AUTHORS: hoanns,nindogo,dgaus
 # magnetdl.com
 # first thirty pages
 
@@ -24,7 +24,7 @@ class magnetdl(object):
 
         while running_total < total_results and pages <= 29:
             pages += 1
-            query = self.url + what[:1] + '/' + what +'/' + str(pages)
+            query = self.url + what[:1] + '/' + what.replace("%20", "-") +'/' + str(pages)
             # print(query)
             data = retrieve_url(query)
             total_results = int(re.findall(self.total_results_num, data)[0].replace(',', ''))
