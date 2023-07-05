@@ -1,4 +1,4 @@
-# VERSION: 0.07
+# VERSION: 0.07b
 # AUTHORS: nindogo (nindogo@gmail.com)
 
 # LICENSING INFORMATION
@@ -52,7 +52,7 @@ class torrentgalaxy(object):
 
             if tag == self.A and self.count_div < 13:
                 my_attrs = dict(attrs)
-                if 'title' in my_attrs and ('class' in my_attrs):
+                if 'title' in my_attrs and ('class' in my_attrs) and 'txlight' in my_attrs.get('class') and not my_attrs.get('id'):
                     self.this_record['name'] = my_attrs['title']
                     self.this_record['desc_link'] = \
                         self.url + my_attrs['href']
