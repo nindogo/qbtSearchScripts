@@ -1,4 +1,4 @@
-# VERSION: 0.07b
+# VERSION: 0.07
 # AUTHORS: nindogo (nindogo@gmail.com)
 
 # LICENSING INFORMATION
