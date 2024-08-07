@@ -1,10 +1,16 @@
-# VERSION: 0.07
+# VERSION: 0.08
 # AUTHORS: nindogo (nindogo@gmail.com)
 
 # LICENSING INFORMATION
 
 import re
 import math
+import http.cookiejar
+import time
+import urllib.request
+import urllib.parse
+import random
+import string
 import threading
 from helpers import retrieve_url
 from novaprinter import prettyPrinter
@@ -101,9 +107,14 @@ class torrentgalaxy(object):
             'sort=seeders&order=desc&search=' + \
             query
 
-        webpage = retrieve_url(full_url)
+        opener = self.init_opener(full_url)
+        response = opener.open(full_url)
+        webpage = response.read().decode('ISO-8859-1')
         tgParser = self.TorrentGalaxyParser()
         tgParser.feed(webpage)
+
+        # Return early bc I don't want to spam their server with my hacked script
+        return
 
         all_results_re = re.compile(r'steelblue[^>]+>(.*?)<')
         all_results = all_results_re.findall(webpage)[0]
@@ -119,6 +130,26 @@ class torrentgalaxy(object):
         
         for thread in threads:
             thread.join()
+
+    def init_opener(self, full_url):
+        # New browser comes in
+        cookie_jar = http.cookiejar.CookieJar()
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
+        opener.open(full_url)
+
+        # Wait 5s to generate our "browser fingerprint" and send it off
+        time.sleep(5)
+
+        hex_length = 32
+        random_hex = ''.join(random.choices(string.hexdigits.lower(), k=hex_length))
+        post_data = urllib.parse.urlencode({'fash': random_hex}).encode()
+        post_url = "https://torrentgalaxy.to/hub.php?a=vlad&u=" + str((int)(time.time() * 1000))
+        post_request = urllib.request.Request(post_url, data=post_data)
+        opener.open(post_request)
+
+        # Our opener is ready to go
+        return opener
+
 
 if __name__ == '__main__':
     a = torrentgalaxy()
