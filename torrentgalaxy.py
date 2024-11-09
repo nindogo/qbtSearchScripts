@@ -1,10 +1,11 @@
-# VERSION: 0.07
+# VERSION: 0.08
 # AUTHORS: nindogo (nindogo@gmail.com)
 
 # LICENSING INFORMATION
 
 import re
 import math
+import time
 import threading
 from helpers import retrieve_url
 from novaprinter import prettyPrinter
@@ -19,7 +20,7 @@ except ImportError:
 
 class torrentgalaxy(object):
     url = 'https://torrentgalaxy.to/'
-    name = 'TorrentGalaxy'
+    name = "TorrentGalaxy"
     supported_categories = {
         'all': '',
         'movies': 'c3=1&c46=1&c45=1&c42=1&c4=1&c1=1&',
@@ -35,7 +36,7 @@ class torrentgalaxy(object):
     class TorrentGalaxyParser(HTMLParser):
         DIV, A, SPAN, FONT, SMALL, = 'div', 'a', 'span', 'font', 'small'
         count_div, = -1,
-        get_size, get_seeds, get_leechs = False, False, False
+        get_size, get_seeds, get_leechs, get_pub_date0, get_pub_date = False, False, False, False, False
         this_record = {}
         url = 'https://torrentgalaxy.to'
 
@@ -49,6 +50,8 @@ class torrentgalaxy(object):
                     self.this_record['engine_url'] = self.url
                 if  my_attrs.get('class') and ('tgxtablecell' in my_attrs.get('class')) and self.count_div >= 0:
                     self.count_div += 1
+                if my_attrs.get('style') and ('text-align:right' in my_attrs.get('style')) and self.count_div >= 0:
+                    self.get_pub_date0 = True
 
             if tag == self.A and self.count_div < 13:
                 my_attrs = dict(attrs)
@@ -75,6 +78,9 @@ class torrentgalaxy(object):
                 prettyPrinter(self.this_record)
                 self.this_record = {}
                 self.count_div = -1
+                
+            if self.get_pub_date0 and tag == self.SMALL:
+                self.get_pub_date = True
 
         def handle_data(self, data):
             if self.get_size is True and self.count_div < 13:
@@ -86,6 +92,9 @@ class torrentgalaxy(object):
             if self.get_leechs is True:
                 self.this_record['leech'] = data.strip().replace(',', '')
                 self.get_leechs = False
+            if self.get_pub_date is True:
+                self.this_record['pub_date'] = str(int(time.mktime(time.strptime(data.strip(),"%d/%m/%y %H:%M"))))
+                self.get_pub_date, self.get_pub_date0 = False, False
 
     def do_search(self, url):
         webpage = retrieve_url(url)
