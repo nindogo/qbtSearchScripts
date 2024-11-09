@@ -19,7 +19,7 @@ except ImportError:
 
 
 class torrentgalaxy(object):
-    url = 'https://torrentgalaxy.to/'
+    url = 'https://torrentgalaxy.to'
     name = "TorrentGalaxy"
     supported_categories = {
         'all': '',
