@@ -13,6 +13,8 @@ def de_pub_date(date_string):
 	this_date = date_string.split()
 	if len(this_date) == 3:
 		t1 = timedelta()
+		if this_date[1] == "minutes":
+			t1 = timedelta(minutes=float(this_date[0]))
 		if this_date[1] == "hours":
 			t1 = timedelta(hours=float(this_date[0]))
 		if this_date[1] == "days":
