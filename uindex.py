@@ -13,12 +13,13 @@ def de_pub_date(date_string):
 	this_date = date_string.split()
 	#this_time_delta = timedelta
 	if len(this_date) == 3:
+		t1 = timedelta()
 		#print(this_date[0])
 		if this_date[1] == "hours":
-			print(this_date[1])
-			print(0 - float(this_date[0]))
+			#print(this_date[1])
+			#print(0 - float(this_date[0]))
 			t1 = timedelta(hours=float(this_date[0]))
-			print(datetime.now() - t1)
+			#print(datetime.now() - t1)
 		if this_date[1] == "days":
 			t1 = timedelta(days=float(this_date[0]))
 		if this_date[1] == "weeks":
@@ -31,7 +32,8 @@ def de_pub_date(date_string):
 			this_date[1] = "days"
 			this_date[0] = str(365 * float(this_date[0]))
 			return de_pub_date(' '.join(this_date))
-			
+		
+		return int((datetime.now() - t1).timestamp())
 
 class uindex(object):
     """
@@ -82,7 +84,6 @@ class uindex(object):
         `cat` is the name of a search category in ('all', 'anime', 'books', 'games', 'movies', 'music', 'pictures', 'software', 'tv')
         """
         
-        original_find_string = r"""<tr>.*?<a href=["'](magnet.*?)["'].*?<a href=["']([^"']*?)["'][^>]*?>([^<]*?)<.*? style=['"]white-space:nowrap[^>]*?>([^<]*?)<.*?class="g"*?>([^<]*?)<.*?class="b"*?>([^<]*?)<.*?"""
         find_string = r"""<tr>.*?<a href=["'](?P<link>magnet.*?)["'].*?<a href=["'](?P<desc_link>[^"']*?)["'][^>]*?>(?P<name>[^<]*?)<.*?class=["']sub["'][^>]*>(?P<pub_date>[^<]*)<.*? style=['"]white-space:nowrap[^>]*?>(?P<size>[^<]*?)<.*?class="g"*?>(?P<seeds>[^<]*?)<.*?class="b"*?>(?P<leech>[^<]*?)<.*?"""
         
         find_torrent = re.compile(find_string, flags=(re.M|re.S))
@@ -90,15 +91,14 @@ class uindex(object):
         query = self.url + "/search.php?search=" + what.replace("%20", "+") + \
 				self.supported_categories[cat] + '&sort=seeders&order=DESC'
         page = retrieve_url(query)
-        #print(page)
         matches = re.finditer(find_torrent, page)
         for match in matches:
             result_dict = {}
             result_dict = match.groupdict()
             result_dict["size"] = result_dict["size"].rstrip()
             result_dict["pub_date"] = result_dict["pub_date"].rstrip()
+            result_dict["pub_date"] = de_pub_date(result_dict['pub_date'])
             result_dict["engine_url"] = self.url
-            #de_pub_date(result_dict['pub_date'])
             prettyPrinter(result_dict)
 
 
