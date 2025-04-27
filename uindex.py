@@ -11,15 +11,10 @@ from novaprinter import prettyPrinter
 
 def de_pub_date(date_string):
 	this_date = date_string.split()
-	#this_time_delta = timedelta
 	if len(this_date) == 3:
 		t1 = timedelta()
-		#print(this_date[0])
 		if this_date[1] == "hours":
-			#print(this_date[1])
-			#print(0 - float(this_date[0]))
 			t1 = timedelta(hours=float(this_date[0]))
-			#print(datetime.now() - t1)
 		if this_date[1] == "days":
 			t1 = timedelta(days=float(this_date[0]))
 		if this_date[1] == "weeks":
