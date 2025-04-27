@@ -79,7 +79,13 @@ class uindex(object):
         `cat` is the name of a search category in ('all', 'anime', 'books', 'games', 'movies', 'music', 'pictures', 'software', 'tv')
         """
         
-        find_string = r"""<tr>.*?<a href=["'](?P<link>magnet.*?)["'].*?<a href=["'](?P<desc_link>[^"']*?)["'][^>]*?>(?P<name>[^<]*?)<.*?class=["']sub["'][^>]*>(?P<pub_date>[^<]*)<.*? style=['"]white-space:nowrap[^>]*?>(?P<size>[^<]*?)<.*?class="g"*?>(?P<seeds>[^<]*?)<.*?class="b"*?>(?P<leech>[^<]*?)<.*?"""
+        find_string = r"""<tr>.*?<a href=["'](?P<link>magnet.*?)["'].*?""" \
+                    + r"""<a href=["'](?P<desc_link>[^"']*?)["']""" \
+                    + r""">(?P<name>[^<]*?)<.*?""" \
+                    + r"""class=["']sub["'][^>]*>(?P<pub_date>[^<]*)<.*?""" \
+                    + r"""style=['"]white-space:nowrap[^>]*?>(?P<size>[^<]*?)<.*?""" \
+                    + r"""class="g".*?>(?P<seeds>[^<]*?)<.*?""" \
+                    + r"""class="b"*?>(?P<leech>[^<]*?)<.*?"""
         
         find_torrent = re.compile(find_string, flags=(re.M|re.S))
         
@@ -100,4 +106,4 @@ class uindex(object):
 
 if __name__ == "__main__":
     engine = uindex()
-    engine.search('ncis')
+    engine.search('Law')
