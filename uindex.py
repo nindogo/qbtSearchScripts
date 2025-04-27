@@ -90,6 +90,7 @@ class uindex(object):
         for match in matches:
             result_dict = {}
             result_dict = match.groupdict()
+            result_dict["desc_link"] = self.url + result_dict["desc_link"] 
             result_dict["size"] = result_dict["size"].rstrip()
             result_dict["pub_date"] = result_dict["pub_date"].rstrip()
             result_dict["pub_date"] = de_pub_date(result_dict['pub_date'])
