@@ -38,12 +38,14 @@ class torrentgalaxy(object):
         count_div, = -1,
         get_size, get_seeds, get_leechs, get_pub_date0, get_pub_date = False, False, False, False, False
         this_record = {}
-        url = 'https://torrentgalaxy.to'
+
+        def __init__(self, url):
+            HTMLParser.__init__(self)
+            self.url = url
 
         def handle_starttag(self, tag, attrs):
             if tag == self.DIV:
                 my_attrs = dict(attrs)
-                # if (my_attrs.get('class') == 'tgxtablerow txlight'):
                 if  my_attrs.get('class') and 'tgxtablerow' in my_attrs.get('class'):
                     self.count_div = 0
                     self.this_record = {}
@@ -98,12 +100,12 @@ class torrentgalaxy(object):
 
     def do_search(self, url):
         webpage = retrieve_url(url)
-        tgParser = self.TorrentGalaxyParser()
+        tgParser = self.TorrentGalaxyParser(url)
         tgParser.feed(webpage)
 
     def search(self, what, cat='all'):
         query = str(what).replace(r' ', '+')
-        search_url = 'https://torrentgalaxy.to/torrents.php?'
+        search_url = self.url + 'torrents.php?'
         full_url = \
             search_url + \
             self.supported_categories[cat.lower()] + \
@@ -111,7 +113,7 @@ class torrentgalaxy(object):
             query
 
         webpage = retrieve_url(full_url)
-        tgParser = self.TorrentGalaxyParser()
+        tgParser = self.TorrentGalaxyParser(self.url)
         tgParser.feed(webpage)
 
         all_results_re = re.compile(r'steelblue[^>]+>(.*?)<')
@@ -124,7 +126,6 @@ class torrentgalaxy(object):
             t = threading.Thread(args=(this_url,), target=self.do_search)
             threads.append(t)
             t.start()
-            # self.do_search(this_url)
         
         for thread in threads:
             thread.join()
